@@ -1,5 +1,5 @@
 function setAccount() {
-    waitForElementToDisplay(".twitter-handle-picker")
+    waitForElementToDisplay(".twitter-handle-picker",300)
 
     //
     //
@@ -30,14 +30,17 @@ function checkTwitterList(selector){
 function getNodeId(TwitterList){
 for (let i = 0; i < TwitterList.length; i++) {
   if(TwitterList[i].childNodes[0].innerText.includes('phpstorm')){
+      console.log(i);
       return i;
   }
 }
 }
 
 function clickTwitterList(time){
-    if(document.querySelector(".twitter-select-menu.zd-selectmenu.zd-state-open.zd-state-position-up.zd-state-focus") != null ){
-        var TwitterList = document.querySelector(".twitter-select-menu.zd-selectmenu.zd-state-open.zd-state-position-up.zd-state-focus").querySelectorAll(".zd-menu-item.zd-leaf");
+    console.log("entered clickTwitterList");
+    console.log(document.querySelector(".twitter-select-menu.zd-selectmenu.zd-state-open"));
+    if(document.querySelector(".twitter-select-menu.zd-selectmenu.zd-state-open") != null ){
+        var TwitterList = document.querySelector(".twitter-select-menu.zd-selectmenu.zd-state-open").querySelectorAll(".zd-menu-item.zd-leaf");
             console.log(TwitterList[7].childNodes[0].innerText);
             var i = getNodeId(TwitterList);
             simulate(TwitterList[i], "mouseup");
@@ -54,7 +57,6 @@ function clickTwitterList(time){
 function getTwitterList(twitterHandle, selector, time){
     if(checkTwitterList(selector)){
             console.log("it's alive!");
-            //var TwitterList = document.querySelector(".zd-menu-item.zd-leaf");
             clickTwitterList(100);
 
 
