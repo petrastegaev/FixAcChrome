@@ -1,0 +1,17 @@
+{
+    "name": "Acc Fixer",
+    "version": "1.0",
+    "description": "Chose right twitter account!",
+    "manifest_version": 2,
+    "permissions": [
+      "activeTab"
+    ],
+    "content_scripts": [
+   {
+     "matches": ["https://jbs.zendesk.com/agent/tickets/*"],
+     "js": ["contentScript.js"],
+     "run_at": "document_end"
+   }
+ ]
+
+}
