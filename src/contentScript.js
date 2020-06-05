@@ -1,27 +1,20 @@
-ACCOUNT='ideaSupport';
+setAccount();
 
-function setAccount() {
-    chrome.storage.sync.get({
-    twitterAccount: 'ideaSupport',
-        }, function(items) {
-            window.ACCOUNT = items.twitterAccount;
-            console.log(items);
-            waitForElementToDisplay(".twitter-handle-picker",300);
-        });
-
-}
-
-
-function gettwitterHandle(container){
-   var twitterHandle = container.querySelectorAll("button");
-   return twitterHandle;
+async function setAccount() {
+    let p = new Promise(function(resolve, reject){chrome.storage.sync.get({twitterAccount: 'ideaSupport'}, function(options){
+            resolve(options.twitterAccount);
+        })
+    });
+    const twitterAccount = await p;
+    let twitterHandle = await getTwitterHandle(".twitter-handle-picker",300);
+    await getTwitterList(twitterHandle[0],'.twitter-select-menu', 100);
+    await clickTwitterList(twitterAccount,300);
 }
 
 
 function checkTwitterList(selector){
     var TwitterList = document.querySelector(selector);
     var TwitterListEnabled = TwitterList.querySelector('.zd-menu-root.zd-menu-autofit-mode').style.cssText;
-    console.log(TwitterListEnabled.includes('none'));
     if(TwitterList != null && !TwitterListEnabled.includes('none')){
         return true
     } else{
@@ -29,63 +22,35 @@ function checkTwitterList(selector){
     }
 }
 
-function getNodeId(TwitterList){
-for (let i = 0; i < TwitterList.length; i++) {
-  if(TwitterList[i].childNodes[0].innerText.includes(ACCOUNT)){
-      console.log(i);
-      return i;
-  }
-}
-}
-
-function clickTwitterList(time){
+async function clickTwitterList(twitterAccount, time){
     console.log("entered clickTwitterList");
-    console.log(document.querySelector(".twitter-select-menu.zd-selectmenu.zd-state-open"));
-    if(document.querySelector(".twitter-select-menu.zd-selectmenu.zd-state-open") != null ){
-        var TwitterList = document.querySelector(".twitter-select-menu.zd-selectmenu.zd-state-open").querySelectorAll(".zd-menu-item.zd-leaf");
-            console.log(ACCOUNT);
-            var i = getNodeId(TwitterList);
+    while (!document.querySelector(".twitter-select-menu.zd-selectmenu.zd-state-open")){
+        await new Promise(resolve => setTimeout(resolve,time));
+    }
+    const TwitterList = document.querySelector(".twitter-select-menu.zd-selectmenu.zd-state-open").querySelectorAll(".zd-menu-item.zd-leaf");
+    for (let i = 0; i < TwitterList.length; i++) {
+        if(TwitterList[i].childNodes[0].innerText.includes(twitterAccount)){
+            console.log(i);
             simulate(TwitterList[i], "mouseup");
-    } else {
-        setTimeout(function () {
-            clickTwitterList(time);
-        }, time);
-
-    }
-
-
-}
-
-function getTwitterList(twitterHandle, selector, time){
-    if(checkTwitterList(selector)){
-            console.log("it's alive!");
-            clickTwitterList(100);
-        } else {
-            console.log("retrying")
-            //twitterHandle.click();
-            simulate(twitterHandle, "mousedown");
-            setTimeout(function () {
-            getTwitterList(twitterHandle, selector, time);
-        }, time);
         }
+    }
 }
 
-function waitForElementToDisplay(selector, time) {
-    if (document.querySelector(selector) != null) {
-        //alert("The element is displayed, you can put your code instead of this alert.")
-        var container = document.querySelector(selector);
-        console.log(container);
-        var twitterHandle = gettwitterHandle(container)[0];
-        console.log(twitterHandle);
-        getTwitterList(twitterHandle, '.twitter-select-menu', 100);
-
-
-
-    } else {
-        setTimeout(function () {
-            waitForElementToDisplay(selector, time);
-        }, time);
+async function getTwitterList(twitterHandle, selector, time){
+    while(!checkTwitterList(selector)){
+        simulate(twitterHandle, "mousedown");
+        await new Promise(resolve => setTimeout(resolve,time));
     }
+
+}
+
+async function getTwitterHandle(selector, time) {
+    while (!document.querySelector(selector) ) { //wait for element to load
+        await new Promise(resolve => setTimeout(resolve, time));
+    }
+    let container = document.querySelector(selector)
+    let twitterHandle = container.querySelectorAll("button");
+    return twitterHandle;
 }
 
 function simulate(element, eventName)
@@ -149,4 +114,4 @@ var defaultOptions = {
     cancelable: true
 }
 
-setAccount();
+
