@@ -11,7 +11,7 @@ async function setAccount() {
         let twitterHandle = await getTwitterHandle(".twitter-handle-picker");
         await getTwitterList(twitterHandle, '.twitter-select-menu');
         await clickTwitterList(twitterAccount);
-    }catch(e){
+    } catch (e) {
         console.error(e);
     }
 }
