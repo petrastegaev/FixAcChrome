@@ -1,88 +1,98 @@
 setAccount();
 
 async function setAccount() {
-    let p = new Promise(function(resolve, reject){chrome.storage.sync.get({twitterAccount: 'ideaSupport'}, function(options){
-            resolve(options.twitterAccount);
-        })
-    });
-    const twitterAccount = await p;
-    let twitterHandle = await getTwitterHandle(".twitter-handle-picker",300);
-    await getTwitterList(twitterHandle[0],'.twitter-select-menu', 100);
-    await clickTwitterList(twitterAccount,300);
+    try {
+        let p = new Promise(function (resolve, reject) {
+            chrome.storage.sync.get({twitterAccount: 'ideaSupport'}, function (options) {
+                resolve(options.twitterAccount);
+            })
+        });
+        const twitterAccount = await p;
+        let twitterHandle = await getTwitterHandle(".twitter-handle-picker");
+        await getTwitterList(twitterHandle, '.twitter-select-menu');
+        await clickTwitterList(twitterAccount);
+    }catch(e){
+        console.error(e);
+    }
 }
 
 
-function checkTwitterList(selector){
-    var TwitterList = document.querySelector(selector);
-    var TwitterListEnabled = TwitterList.querySelector('.zd-menu-root.zd-menu-autofit-mode').style.cssText;
-    if(TwitterList != null && !TwitterListEnabled.includes('none')){
+function checkTwitterList(selector) {
+    const TwitterList = document.querySelector(selector);
+    const TwitterListEnabled = TwitterList.querySelector('.zd-menu-root.zd-menu-autofit-mode').style.cssText;
+    if (TwitterListEnabled.includes('none')) {
         return true
-    } else{
+    } else {
         return false
     }
 }
 
-async function clickTwitterList(twitterAccount, time){
-    console.log("entered clickTwitterList");
-    while (!document.querySelector(".twitter-select-menu.zd-selectmenu.zd-state-open")){
-        await new Promise(resolve => setTimeout(resolve,time));
-    }
-    const TwitterList = document.querySelector(".twitter-select-menu.zd-selectmenu.zd-state-open").querySelectorAll(".zd-menu-item.zd-leaf");
-    for (let i = 0; i < TwitterList.length; i++) {
-        if(TwitterList[i].childNodes[0].innerText.includes(twitterAccount)){
-            console.log(i);
-            simulate(TwitterList[i], "mouseup");
+async function clickTwitterList(twitterAccount) {
+    checkElement('.twitter-select-menu.zd-selectmenu.zd-state-open').then((element) => {
+        const TwitterList = element.querySelectorAll(".zd-menu-item.zd-leaf");
+        for (let i = 0; i < TwitterList.length; i++) {
+            if (TwitterList[i].childNodes[0].innerText.includes(twitterAccount)) {
+                simulate(TwitterList[i], "mouseup");
+            }
         }
-    }
+    });
+
 }
 
-async function getTwitterList(twitterHandle, selector, time){
-    while(!checkTwitterList(selector)){
+async function getTwitterList(twitterHandle, selector) {
+    while (checkTwitterList(selector)) {
         simulate(twitterHandle, "mousedown");
-        await new Promise(resolve => setTimeout(resolve,time));
+        //await new Promise(resolve => setTimeout(resolve, 1000));
+        await rafAsync();
     }
 
 }
 
-async function getTwitterHandle(selector, time) {
-    while (!document.querySelector(selector) ) { //wait for element to load
-        await new Promise(resolve => setTimeout(resolve, time));
-    }
-    let container = document.querySelector(selector)
-    let twitterHandle = container.querySelectorAll("button");
+async function getTwitterHandle(selector) {
+    let twitterHandle = checkElement(selector).then((element) => {
+        return element.querySelectorAll("button")[0];
+    });
     return twitterHandle;
 }
 
-function simulate(element, eventName)
-{
+async function checkElement(selector) {
+    while (document.querySelector(selector) === null) {
+        await rafAsync()
+    }
+    return document.querySelector(selector);
+}
+
+function rafAsync() {
+    return new Promise(resolve => {
+        requestAnimationFrame(resolve); //faster than set time out
+    });
+}
+
+function simulate(element, eventName) {
     var options = extend(defaultOptions, arguments[2] || {});
     var oEvent, eventType = null;
 
-    for (var name in eventMatchers)
-    {
-        if (eventMatchers[name].test(eventName)) { eventType = name; break; }
+    for (var name in eventMatchers) {
+        if (eventMatchers[name].test(eventName)) {
+            eventType = name;
+            break;
+        }
     }
 
     if (!eventType)
         throw new SyntaxError('Only HTMLEvents and MouseEvents interfaces are supported');
 
-    if (document.createEvent)
-    {
+    if (document.createEvent) {
         oEvent = document.createEvent(eventType);
-        if (eventType == 'HTMLEvents')
-        {
+        if (eventType == 'HTMLEvents') {
             oEvent.initEvent(eventName, options.bubbles, options.cancelable);
-        }
-        else
-        {
+        } else {
             oEvent.initMouseEvent(eventName, options.bubbles, options.cancelable, document.defaultView,
-            options.button, options.pointerX, options.pointerY, options.pointerX, options.pointerY,
-            options.ctrlKey, options.altKey, options.shiftKey, options.metaKey, options.button, element);
+                options.button, options.pointerX, options.pointerY, options.pointerX, options.pointerY,
+                options.ctrlKey, options.altKey, options.shiftKey, options.metaKey, options.button, element);
         }
         element.dispatchEvent(oEvent);
-    }
-    else
-    {
+    } else {
         options.clientX = options.pointerX;
         options.clientY = options.pointerY;
         var evt = document.createEventObject();
@@ -94,7 +104,7 @@ function simulate(element, eventName)
 
 function extend(destination, source) {
     for (var property in source)
-      destination[property] = source[property];
+        destination[property] = source[property];
     return destination;
 }
 
