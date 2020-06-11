@@ -1,7 +1,17 @@
-setAccount();
+setAccount().then((result) => {
+    if (result) {
+        console.info("done");
+    } else {
+        console.info("not a twitter  ticket, doing nothing");
+    }
+});
 
 async function setAccount() {
     try {
+        let twitterTag = await getTag();
+        if (!twitterTag.innerText.includes("twitter")) {
+            return false;
+        }
         let p = new Promise(function (resolve, reject) {
             chrome.storage.sync.get({twitterAccount: 'ideaSupport'}, function (options) {
                 resolve(options.twitterAccount);
@@ -11,19 +21,26 @@ async function setAccount() {
         let twitterHandle = await getTwitterHandle(".twitter-handle-picker");
         await getTwitterList(twitterHandle, '.twitter-select-menu');
         await clickTwitterList(twitterAccount);
+        return true;
     } catch (e) {
         console.error(e);
     }
 }
 
+async function getTag() {
+    let twitterTag = checkElement(".zd-tag-item").then((element) => {
+        return element;
+    });
+    return twitterTag;
+}
 
 function checkTwitterList(selector) {
     const TwitterList = document.querySelector(selector);
     const TwitterListEnabled = TwitterList.querySelector('.zd-menu-root.zd-menu-autofit-mode').style.cssText;
     if (TwitterListEnabled.includes('none')) {
-        return true
+        return true;
     } else {
-        return false
+        return false;
     }
 }
 
