@@ -13,7 +13,7 @@ async function setAccount() {
             return false;
         }
         let p = new Promise(function (resolve, reject) {
-            chrome.storage.sync.get({twitterAccount: 'ideaSupport'}, function (options) {
+            chrome.storage.sync.get({twitterAccount: 'IntelliJSupport'}, function (options) {
                 resolve(options.twitterAccount);
             })
         });
