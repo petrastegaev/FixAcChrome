@@ -1,17 +1,6 @@
-setAccount().then((result) => {
-    if (result) {
-        console.info("done");
-    } else {
-        console.info("not a twitter  ticket, doing nothing");
-    }
-});
-
 async function setAccount() {
     try {
-        let twitterTag = await getTag();
-        if (!twitterTag.innerText.includes("twitter")) {
-            return false;
-        }
+
         let p = new Promise(function (resolve, reject) {
             chrome.storage.sync.get({twitterAccount: 'IntelliJSupport'}, function (options) {
                 resolve(options.twitterAccount);
@@ -28,7 +17,7 @@ async function setAccount() {
 }
 
 async function getTag() {
-    let twitterTag = checkElement(".zd-tag-item").then((element) => {
+    let twitterTag = checkElement(".ember-view.form_field.tags").then((element) => {
         return element;
     });
     return twitterTag;
@@ -142,3 +131,60 @@ var defaultOptions = {
 }
 
 
+const changeWorkspaceFocus = (workspace) => {
+    console.log(`changeWorkspaceFocus`);
+    if (workspace.tagName === 'DIV') {
+        const style = workspace.getAttribute('style');
+        if (!style || !style.match('.*display:\\s*none;.*')) {
+            console.log(`setAccount`);
+            setAccount();
+        }
+    }
+};
+
+const workspaceHook = (mutations) => {
+    mutations.forEach(mutation => {
+        mutation.addedNodes.forEach(node => {
+            console.log(`Hook`);
+            changeWorkspaceFocus(node);
+            const observer = new MutationObserver(workspaceWatcher);
+            observer.observe(node, {attributes: true, attributeFilter: ['style']});
+        });
+    });
+};
+
+const workspaceWatcher = (mutations) => {
+    mutations.forEach(mutation => {
+        changeWorkspaceFocus(mutation.target);
+        console.log(`Watcher`);
+    });
+};
+
+async function mutationLoader() {
+    console.log(`Loader`);
+    let twitterTag = await getTag();
+    console.log(twitterTag);
+    if (!twitterTag.innerText.includes("twitter")) {
+        return false;
+    }
+    const mainPanes = document.getElementById('main_panes');
+    if (mainPanes) {
+        const observer = new MutationObserver(workspaceHook);
+        observer.observe(mainPanes, {childList: true});
+        mainPanes.childNodes.forEach(x => {
+            changeWorkspaceFocus(x);
+        });
+    } else {
+        window.setTimeout(mutationLoader, 1000);
+    }
+    return true;
+};
+
+mutationLoader().then((result) => {
+    if (result) {
+        console.info("done");
+    } else {
+        console.info("not a twitter  ticket, doing nothing");
+    }
+});
+;

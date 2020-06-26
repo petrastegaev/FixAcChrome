@@ -10,7 +10,7 @@
   "content_scripts": [
     {
       "matches": [
-        "https://jbs.zendesk.com/agent/tickets/*"
+        "*://jbs.zendesk.com/agent/*"
       ],
       "js": [
         "contentScript.js"
