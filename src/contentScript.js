@@ -1,6 +1,10 @@
 async function setAccount() {
     try {
-
+        //TODO fix twittercheck
+        /*if(!await checkTicket()){
+            console.info("not a twitter  ticket, doing nothing");
+            return false;
+        }*/
         let p = new Promise(function (resolve, reject) {
             chrome.storage.sync.get({twitterAccount: 'IntelliJSupport'}, function (options) {
                 resolve(options.twitterAccount);
@@ -8,64 +12,142 @@ async function setAccount() {
         });
         const twitterAccount = await p;
         let twitterHandle = await getTwitterHandle(".twitter-handle-picker");
+        console.log("twitterHandle", twitterHandle);
         await getTwitterList(twitterHandle, '.twitter-select-menu');
         await clickTwitterList(twitterAccount);
+        //await setFocus();
+        console.info("done");
         return true;
     } catch (e) {
         console.error(e);
     }
 }
 
-async function getTag() {
-    let twitterTag = checkElement(".ember-view.form_field.tags").then((element) => {
-        return element;
+async function checkTicket() {
+    //const twitterTag = document.querySelectorAll(".header.pane_header.mast.clearfix.twitter");
+    return await checkElements(".header.pane_header.mast.clearfix.twitter").then(async (twitterTag) => {
+        let result = false;
+        console.log(twitterTag);
+        if (twitterTag && twitterTag.length > 0) {
+            for (let i = 0; i < twitterTag.length; ++i) {
+                console.log(twitterTag[i].offsetWidth);
+                console.log(twitterTag[i].classList);
+                if (twitterTag[i].classList.contains('twitter') && twitterTag[i].offsetWidth > 0 && twitterTag[i].offsetHeight > 0) {
+                    console.log(twitterTag[i].className.split(' '));
+                    result = true;
+                }
+            }
+        }
+        return result;
     });
-    return twitterTag;
+
 }
 
+async function setFocus() {
+    console.log("Setting Focus");
+    await checkElements(".comment_input_wrapper").then(async (element) => {
+        let textArea = element.querySelector(".ember-text-area");
+        console.log(textArea);
+        //setTimeout(textArea.click(), 30);
+        //await simulate(textArea, "mousemove");
+        //await simulate(textArea, "mousedown");
+        //await textArea.preventDefault();
+        //await textArea.focus();
+        await simulate(textArea, "mouseup");
+        //await textArea.click();
+    });
+}
+
+
 function checkTwitterList(selector) {
-    const TwitterList = document.querySelector(selector);
-    const TwitterListEnabled = TwitterList.querySelector('.zd-menu-root.zd-menu-autofit-mode').style.cssText;
-    if (TwitterListEnabled.includes('none')) {
-        return true;
-    } else {
-        return false;
+    const TwitterList = document.querySelectorAll(selector);
+    console.log(TwitterList);
+    let result = true;
+    for (let i = 0; i < TwitterList.length; ++i) {
+        //if (TwitterList[i].offsetWidth > 0 && TwitterList[i].offsetHeight > 0) {
+        const TwitterListEnabled = TwitterList[i].querySelector('.zd-menu-root.zd-menu-autofit-mode').style.cssText;
+        console.log(TwitterListEnabled);
+        if (!TwitterListEnabled.includes('none')) {
+            console.log("TwitterList enabled");
+            result = false;
+        }
+        //}
     }
+    console.log("checkTwitterList result ", result);
+    return result;
 }
 
 async function clickTwitterList(twitterAccount) {
-    checkElement('.twitter-select-menu.zd-selectmenu.zd-state-open').then((element) => {
-        const TwitterList = element.querySelectorAll(".zd-menu-item.zd-leaf");
-        for (let i = 0; i < TwitterList.length; i++) {
-            if (TwitterList[i].childNodes[0].innerText.includes(twitterAccount)) {
-                simulate(TwitterList[i], "mouseup");
+    await checkElements('.twitter-select-menu.zd-selectmenu.zd-state-open').then(async (element) => {
+        let list = element;
+        console.log(list);
+        for (let i = 0; i < list.length; ++i) {
+            const TwitterList = list[i].childNodes[0];
+            console.log(TwitterList);
+            if (TwitterList.offsetWidth > 0 && TwitterList.offsetHeight > 0) {
+                console.log(twitterAccount);
+                let TwitterNodeList = TwitterList.querySelectorAll(".zd-menu-item.zd-leaf");
+                for (let i = 0; i < TwitterNodeList.length; i++) {
+                    console.log(TwitterNodeList[i].childNodes[0].innerText);
+                    if (TwitterNodeList[i].childNodes[0].innerText.includes(twitterAccount)) {
+                        TwitterNodeList[i].scrollIntoView();
+                        TwitterNodeList[i].focus();
+                        console.log(TwitterNodeList[i]);
+                        await simulate(TwitterNodeList[i], "mousemove");
+                        console.log("clicking");
+                        await simulate(TwitterNodeList[i], "mousedown");
+                        await simulate(TwitterNodeList[i], "mouseup");
+                    }
+                }
             }
         }
+
+
     });
 
 }
 
 async function getTwitterList(twitterHandle, selector) {
-    while (checkTwitterList(selector)) {
-        simulate(twitterHandle, "mousedown");
-        //await new Promise(resolve => setTimeout(resolve, 1000));
-        await rafAsync();
+    while (checkTwitterList(selector)) { //TODO Refactor endless cycle
+        console.log("opening twitter list");
+        await simulate(twitterHandle, "mouseup");
+        await simulate(twitterHandle, "mousedown");
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        //await rafAsync();
     }
+    console.log("getTwitterList finished");
 
 }
 
 async function getTwitterHandle(selector) {
-    let twitterHandle = checkElement(selector).then((element) => {
-        return element.querySelectorAll("button")[0];
+    let twitterHandle = await checkElements(selector).then(async function handlefunc(element) {
+        let list = document.querySelectorAll(selector);
+        console.log(list);
+        let handle;
+        for (let i = 0; i < list.length; ++i) {
+            if (list[i].offsetWidth > 0 && list[i].offsetHeight > 0) {
+                //console.log("twitterHandle1", list[i].querySelectorAll("button")[0]);
+                handle = list[i].querySelectorAll("button")[0];
+            }
+        }
+        if (handle == null) {
+            console.log("twitterHandle is null");
+            await rafAsync();
+            return await handlefunc(); //TODO refactor this
+        } else {
+            console.log("twitterHandle returned ", handle);
+            return handle;
+        }
     });
+    console.log(twitterHandle);
     return twitterHandle;
 }
 
-async function checkElement(selector) {
-    while (document.querySelector(selector) === null) {
+async function checkElements(selector) {
+    while (document.querySelectorAll(selector) === null) {
         await rafAsync()
     }
-    return document.querySelector(selector);
+    return document.querySelectorAll(selector);
 }
 
 function rafAsync() {
@@ -74,13 +156,14 @@ function rafAsync() {
     });
 }
 
-function simulate(element, eventName) {
-    var options = extend(defaultOptions, arguments[2] || {});
-    var oEvent, eventType = null;
-
-    for (var name in eventMatchers) {
+async function simulate(element, eventName) {
+    const options = extend(defaultOptions, arguments[2] || {});
+    let oEvent, eventType = null;
+    console.log("enter simulate function");
+    for (let name in eventMatchers) {
         if (eventMatchers[name].test(eventName)) {
             eventType = name;
+            console.log("simulate function break!");
             break;
         }
     }
@@ -101,10 +184,12 @@ function simulate(element, eventName) {
     } else {
         options.clientX = options.pointerX;
         options.clientY = options.pointerY;
-        var evt = document.createEventObject();
+        let evt = document.createEventObject();
         oEvent = extend(evt, options);
         element.fireEvent('on' + eventName, oEvent);
     }
+    console.log("exit simulate function");
+    console.log(element);
     return element;
 }
 
@@ -130,11 +215,11 @@ var defaultOptions = {
     cancelable: true
 }
 
-
-const changeWorkspaceFocus = (workspace) => {
+async function changeWorkspaceFocus(workspace) {
     console.log(`changeWorkspaceFocus`);
     if (workspace.tagName === 'DIV') {
         const style = workspace.getAttribute('style');
+        console.log(workspace);
         if (!style || !style.match('.*display:\\s*none;.*')) {
             console.log(`setAccount`);
             setAccount();
@@ -142,37 +227,34 @@ const changeWorkspaceFocus = (workspace) => {
     }
 };
 
-const workspaceHook = (mutations) => {
-    mutations.forEach(mutation => {
-        mutation.addedNodes.forEach(node => {
+
+async function workspaceHook(mutations) {
+    await mutations.forEach(async mutation => {
+        await mutation.addedNodes.forEach(async node => {
             console.log(`Hook`);
-            changeWorkspaceFocus(node);
+            await changeWorkspaceFocus(node);
             const observer = new MutationObserver(workspaceWatcher);
             observer.observe(node, {attributes: true, attributeFilter: ['style']});
         });
     });
 };
 
-const workspaceWatcher = (mutations) => {
-    mutations.forEach(mutation => {
-        changeWorkspaceFocus(mutation.target);
+async function workspaceWatcher(mutations) {
+    mutations.forEach(async mutation => {
+        await changeWorkspaceFocus(mutation.target);
         console.log(`Watcher`);
     });
 };
 
 async function mutationLoader() {
     console.log(`Loader`);
-    let twitterTag = await getTag();
-    console.log(twitterTag);
-    if (!twitterTag.innerText.includes("twitter")) {
-        return false;
-    }
     const mainPanes = document.getElementById('main_panes');
     if (mainPanes) {
+        console.log(mainPanes);
         const observer = new MutationObserver(workspaceHook);
         observer.observe(mainPanes, {childList: true});
-        mainPanes.childNodes.forEach(x => {
-            changeWorkspaceFocus(x);
+        await mainPanes.childNodes.forEach(async x => {
+            await changeWorkspaceFocus(x);
         });
     } else {
         window.setTimeout(mutationLoader, 1000);
@@ -182,9 +264,9 @@ async function mutationLoader() {
 
 mutationLoader().then((result) => {
     if (result) {
-        console.info("done");
+        console.info("mutation loader finished");
     } else {
-        console.info("not a twitter  ticket, doing nothing");
+        console.info("error");
     }
 });
 ;
