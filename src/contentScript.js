@@ -1,9 +1,10 @@
 async function setAccount() {
     try {
-        //TODO fix twittercheck
         if (!await checkTicket()) {
             console.info("not a twitter  ticket, doing nothing");
             return false;
+        } else {
+            console.info("twitter  ticket, detected");
         }
         let p = new Promise(function (resolve, reject) {
             chrome.storage.sync.get({twitterAccount: 'IntelliJSupport'}, function (options) {
@@ -11,11 +12,12 @@ async function setAccount() {
             })
         });
         const twitterAccount = await p;
+        console.log(document.querySelectorAll(".header.pane_header"));
         let twitterHandle = await getTwitterHandle(".twitter-handle-picker");
         console.log("twitterHandle", twitterHandle);
         await getTwitterList(twitterHandle, '.twitter-select-menu');
         await clickTwitterList(twitterAccount);
-        //await setFocus();
+        await setFocus();
         console.info("done");
         return true;
     } catch (e) {
@@ -24,8 +26,8 @@ async function setAccount() {
 }
 
 async function checkTicket() {
+    await new Promise(resolve => setTimeout(resolve, 1000));
     return await checkElements(".header.pane_header.mast.clearfix.twitter").then(async (twitterTag) => {
-        await new Promise(resolve => setTimeout(resolve, 1000));
         let result = false;
         console.log(twitterTag);
         if (twitterTag && twitterTag.length > 0) {
@@ -45,16 +47,21 @@ async function checkTicket() {
 
 async function setFocus() {
     console.log("Setting Focus");
-    await checkElements(".comment_input_wrapper").then(async (element) => {
-        let textArea = element.querySelector(".ember-text-area");
-        console.log(textArea);
-        //setTimeout(textArea.click(), 30);
-        //await simulate(textArea, "mousemove");
-        //await simulate(textArea, "mousedown");
-        //await textArea.preventDefault();
-        //await textArea.focus();
-        await simulate(textArea, "mouseup");
-        //await textArea.click();
+    await checkElements(".comment_input_wrapper").then(async (InputField) => {
+        for (let i = 0; i < InputField.length; i++) {
+            console.log(InputField);
+            if (InputField[i].offsetWidth > 0 && InputField[i].offsetHeight > 0) {
+                let textArea = InputField[i].querySelector(".ember-text-area");
+                console.log(textArea);
+                //setTimeout(textArea.click(), 30);
+                //await simulate(textArea, "mousemove");
+                await simulate(textArea, "mousedown");
+                //await textArea.preventDefault();
+                await textArea.focus();
+                await simulate(textArea, "mouseup");
+                await textArea.click();
+            }
+        }
     });
 }
 
@@ -220,7 +227,7 @@ async function changeWorkspaceFocus(workspace) {
         console.log(workspace);
         if (!style || !style.match('.*display:\\s*none;.*')) {
             console.log(`setAccount`);
-            setAccount();
+            await setAccount();
         }
     }
 };
@@ -231,14 +238,14 @@ async function workspaceHook(mutations) {
         await mutation.addedNodes.forEach(async node => {
             console.log(`Hook`);
             await changeWorkspaceFocus(node);
-            const observer = new MutationObserver(workspaceWatcher);
-            observer.observe(node, {attributes: true, attributeFilter: ['style']});
+            const observer = await new MutationObserver(workspaceWatcher);
+            await observer.observe(node, {attributes: true, attributeFilter: ['style']});
         });
     });
 };
 
 async function workspaceWatcher(mutations) {
-    mutations.forEach(async mutation => {
+    await mutations.forEach(async mutation => {
         await changeWorkspaceFocus(mutation.target);
         console.log(`Watcher`);
     });
@@ -249,8 +256,8 @@ async function mutationLoader() {
     const mainPanes = document.getElementById('main_panes');
     if (mainPanes) {
         console.log(mainPanes);
-        const observer = new MutationObserver(workspaceHook);
-        observer.observe(mainPanes, {childList: true});
+        const observer = await new MutationObserver(workspaceHook);
+        await observer.observe(mainPanes, {childList: true});
         await mainPanes.childNodes.forEach(async x => {
             await changeWorkspaceFocus(x);
         });
