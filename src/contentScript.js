@@ -26,7 +26,8 @@ async function setAccount() {
 }
 
 async function checkTicket() {
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await rafAsync();
+    await new Promise(resolve => setTimeout(resolve, 500));
     return await checkElements(".header.pane_header.mast.clearfix.twitter").then(async (twitterTag) => {
         let result = false;
         console.log(twitterTag);
