@@ -1,10 +1,10 @@
 async function setAccount() {
     try {
         //TODO fix twittercheck
-        /*if(!await checkTicket()){
+        if (!await checkTicket()) {
             console.info("not a twitter  ticket, doing nothing");
             return false;
-        }*/
+        }
         let p = new Promise(function (resolve, reject) {
             chrome.storage.sync.get({twitterAccount: 'IntelliJSupport'}, function (options) {
                 resolve(options.twitterAccount);
@@ -24,16 +24,16 @@ async function setAccount() {
 }
 
 async function checkTicket() {
-    //const twitterTag = document.querySelectorAll(".header.pane_header.mast.clearfix.twitter");
     return await checkElements(".header.pane_header.mast.clearfix.twitter").then(async (twitterTag) => {
+        await new Promise(resolve => setTimeout(resolve, 1000));
         let result = false;
         console.log(twitterTag);
         if (twitterTag && twitterTag.length > 0) {
             for (let i = 0; i < twitterTag.length; ++i) {
-                console.log(twitterTag[i].offsetWidth);
-                console.log(twitterTag[i].classList);
+                //console.log(twitterTag[i].offsetWidth);
+                //console.log(twitterTag[i].classList);
                 if (twitterTag[i].classList.contains('twitter') && twitterTag[i].offsetWidth > 0 && twitterTag[i].offsetHeight > 0) {
-                    console.log(twitterTag[i].className.split(' '));
+                    //console.log(twitterTag[i].className.split(' '));
                     result = true;
                 }
             }
@@ -61,17 +61,16 @@ async function setFocus() {
 
 function checkTwitterList(selector) {
     const TwitterList = document.querySelectorAll(selector);
-    console.log(TwitterList);
+    //console.log(TwitterList);
     let result = true;
     for (let i = 0; i < TwitterList.length; ++i) {
-        //if (TwitterList[i].offsetWidth > 0 && TwitterList[i].offsetHeight > 0) {
         const TwitterListEnabled = TwitterList[i].querySelector('.zd-menu-root.zd-menu-autofit-mode').style.cssText;
-        console.log(TwitterListEnabled);
+        //console.log(TwitterListEnabled);
         if (!TwitterListEnabled.includes('none')) {
             console.log("TwitterList enabled");
             result = false;
         }
-        //}
+
     }
     console.log("checkTwitterList result ", result);
     return result;
@@ -80,19 +79,19 @@ function checkTwitterList(selector) {
 async function clickTwitterList(twitterAccount) {
     await checkElements('.twitter-select-menu.zd-selectmenu.zd-state-open').then(async (element) => {
         let list = element;
-        console.log(list);
+        //console.log(list);
         for (let i = 0; i < list.length; ++i) {
             const TwitterList = list[i].childNodes[0];
-            console.log(TwitterList);
+            //console.log(TwitterList);
             if (TwitterList.offsetWidth > 0 && TwitterList.offsetHeight > 0) {
                 console.log(twitterAccount);
                 let TwitterNodeList = TwitterList.querySelectorAll(".zd-menu-item.zd-leaf");
                 for (let i = 0; i < TwitterNodeList.length; i++) {
-                    console.log(TwitterNodeList[i].childNodes[0].innerText);
+                    //console.log(TwitterNodeList[i].childNodes[0].innerText);
                     if (TwitterNodeList[i].childNodes[0].innerText.includes(twitterAccount)) {
                         TwitterNodeList[i].scrollIntoView();
                         TwitterNodeList[i].focus();
-                        console.log(TwitterNodeList[i]);
+                        //console.log(TwitterNodeList[i]);
                         await simulate(TwitterNodeList[i], "mousemove");
                         console.log("clicking");
                         await simulate(TwitterNodeList[i], "mousedown");
@@ -112,8 +111,8 @@ async function getTwitterList(twitterHandle, selector) {
         console.log("opening twitter list");
         await simulate(twitterHandle, "mouseup");
         await simulate(twitterHandle, "mousedown");
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        //await rafAsync();
+        //await new Promise(resolve => setTimeout(resolve, 1000));
+        await rafAsync();
     }
     console.log("getTwitterList finished");
 
@@ -126,7 +125,6 @@ async function getTwitterHandle(selector) {
         let handle;
         for (let i = 0; i < list.length; ++i) {
             if (list[i].offsetWidth > 0 && list[i].offsetHeight > 0) {
-                //console.log("twitterHandle1", list[i].querySelectorAll("button")[0]);
                 handle = list[i].querySelectorAll("button")[0];
             }
         }
@@ -163,7 +161,7 @@ async function simulate(element, eventName) {
     for (let name in eventMatchers) {
         if (eventMatchers[name].test(eventName)) {
             eventType = name;
-            console.log("simulate function break!");
+            //console.log("simulate function break!");
             break;
         }
     }
