@@ -48,19 +48,16 @@ async function checkTicket() {
 
 async function setFocus() {
     console.log("Setting Focus");
+    await new Promise(resolve => setTimeout(resolve, 500));
+    await rafAsync();
     await checkElements(".comment_input_wrapper").then(async (InputField) => {
         for (let i = 0; i < InputField.length; i++) {
             console.log(InputField);
+
             if (InputField[i].offsetWidth > 0 && InputField[i].offsetHeight > 0) {
                 let textArea = InputField[i].querySelector(".ember-text-area");
                 console.log(textArea);
-                //setTimeout(textArea.click(), 30);
-                //await simulate(textArea, "mousemove");
-                await simulate(textArea, "mousedown");
-                //await textArea.preventDefault();
                 await textArea.focus();
-                await simulate(textArea, "mouseup");
-                await textArea.click();
             }
         }
     });
@@ -97,8 +94,8 @@ async function clickTwitterList(twitterAccount) {
                 for (let i = 0; i < TwitterNodeList.length; i++) {
                     //console.log(TwitterNodeList[i].childNodes[0].innerText);
                     if (TwitterNodeList[i].childNodes[0].innerText.includes(twitterAccount)) {
-                        TwitterNodeList[i].scrollIntoView();
-                        TwitterNodeList[i].focus();
+                        await TwitterNodeList[i].scrollIntoView();
+                        await TwitterNodeList[i].focus();
                         //console.log(TwitterNodeList[i]);
                         await simulate(TwitterNodeList[i], "mousemove");
                         console.log("clicking");
