@@ -4,7 +4,7 @@ async function setAccount() {
             console.info("not a twitter  ticket, doing nothing");
             return false;
         } else {
-            console.info("twitter  ticket, detected");
+            console.info("twitter ticket, detected");
         }
         let p = new Promise(function (resolve, reject) {
             chrome.storage.sync.get({twitterAccount: 'IntelliJSupport'}, function (options) {
@@ -12,9 +12,14 @@ async function setAccount() {
             })
         });
         const twitterAccount = await p;
+        console.log("twitterAccount", twitterAccount);
         console.log(document.querySelectorAll(".header.pane_header"));
         let twitterHandle = await getTwitterHandle(".twitter-handle-picker");
         console.log("twitterHandle", twitterHandle);
+        if (!twitterHandle) {
+            console.info("twitterhandle not found, doing nothing");
+            return false;
+        }
         await getTwitterList(twitterHandle, '.twitter-select-menu');
         await clickTwitterList(twitterAccount);
         await setFocus();
@@ -91,6 +96,7 @@ async function clickTwitterList(twitterAccount) {
             if (TwitterList.offsetWidth > 0 && TwitterList.offsetHeight > 0) {
                 console.log(twitterAccount);
                 let TwitterNodeList = TwitterList.querySelectorAll(".zd-menu-item.zd-leaf");
+                let accFound = false;
                 for (let i = 0; i < TwitterNodeList.length; i++) {
                     //console.log(TwitterNodeList[i].childNodes[0].innerText);
                     if (TwitterNodeList[i].childNodes[0].innerText.includes(twitterAccount)) {
@@ -101,7 +107,14 @@ async function clickTwitterList(twitterAccount) {
                         console.log("clicking");
                         await simulate(TwitterNodeList[i], "mousedown");
                         await simulate(TwitterNodeList[i], "mouseup");
+                        accFound = true;
                     }
+                }
+                if (!accFound) {
+                    console.info("no such account in a list: ", twitterAccount);
+                    return false;
+                } else {
+                    return true;
                 }
             }
         }
@@ -124,6 +137,7 @@ async function getTwitterList(twitterHandle, selector) {
 }
 
 async function getTwitterHandle(selector) {
+    let i = 0;
     let twitterHandle = await checkElements(selector).then(async function handlefunc(element) {
         let list = document.querySelectorAll(selector);
         console.log(list);
@@ -135,8 +149,14 @@ async function getTwitterHandle(selector) {
         }
         if (handle == null) {
             console.log("twitterHandle is null");
+            i++;
             await rafAsync();
-            return await handlefunc(); //TODO refactor this
+            if (i < 500) {
+                return await handlefunc(); //TODO refactor this
+            } else {
+                return false;
+            }
+
         } else {
             console.log("twitterHandle returned ", handle);
             return handle;
