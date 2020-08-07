@@ -1,6 +1,6 @@
 {
   "name": "Acc Fixer",
-  "version": "1.5",
+  "version": "1.0.1",
   "description": "Chose right twitter account!",
   "manifest_version": 2,
   "permissions": [
