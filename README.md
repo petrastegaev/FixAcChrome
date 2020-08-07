@@ -1,1 +1,1 @@
-Development of the extension will continue at https://github.com/petrastegaev/FixAcChrome under Apache2 license
+Chrome extension to fix twitter account in a zendesk
