@@ -1,8 +1,12 @@
 {
   "name": "Acc Fixer",
   "version": "1.0.1",
-  "description": "Chose right twitter account!",
+  "description": "This extension chooses rigt twitter account instead of default one in zendesk app",
   "manifest_version": 2,
+  "icons": {
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
   "permissions": [
     "activeTab",
     "storage"
