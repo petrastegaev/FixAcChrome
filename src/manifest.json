@@ -14,7 +14,7 @@
   "content_scripts": [
     {
       "matches": [
-        "*://jbs.zendesk.com/agent/*"
+        "*://*.zendesk.com/agent/*"
       ],
       "js": [
         "contentScript.js"
