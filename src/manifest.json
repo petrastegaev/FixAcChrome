@@ -1,9 +1,10 @@
 {
   "name": "Zendesk Twitter account fixer",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "This extension chooses right twitter account instead of default one in a Zendesk app",
   "manifest_version": 2,
   "icons": {
+    "16": "icon16.png",
     "48": "icon48.png",
     "128": "icon128.png"
   },
